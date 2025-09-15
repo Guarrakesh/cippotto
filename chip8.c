@@ -34,7 +34,7 @@ t_chip8 NewChip() {
 	for (int i=0; i<16;i++) chip.stack[i] = 0;
 	for (int i=0; i<16;i++) chip.registers[i] = 0;
 
-	chip.sp = 0; // Convenction adopted: sp points to the first free location on the stack. So last element pushed
+	chip.sp = 0; // Convention adopted: sp points to the first free location on the stack. So last element pushed
 	// is (sp-1)
 	chip.index = 0;
 	chip.timer = 0;
@@ -145,19 +145,21 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 					break;
 				}
 				case 0x0005:
-				case 0x0007:
+				case 0x0007: {
 
-					// Set carry (borrow) to 1 if minuend > subtrahend
-					if ((N == 0x0005 && vx > vy) || (N == 0x0007 && vy > vx)) {
-						chip8->registers[0xF] = 1;
-					} else {
-						chip8->registers[0xF] = 0;
-					}
 					chip8->registers[X] = (N == 0x0005 
-										? vx - vy
-										: vy - vx
+										? chip8->registers[X] - chip8->registers[Y]
+										: chip8->registers[Y] - chip8->registers[X]
 					);
+					// Set carry (borrow) to 1 if minuend > subtrahend
+					if ((N == 0x0005 && vx >=  vy) || (N == 0x0007 && vy >= vx)) {
+						chip8->registers[0xF] = 1; // no borrow
+					} else {
+						chip8->registers[0xF] = 0; // borrow
+					}
+
 					break;
+				}
 				case 0x0006:
 				case 0x000E: { 
 					// Shift

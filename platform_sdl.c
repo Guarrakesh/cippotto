@@ -80,7 +80,7 @@ void Run(Platform *self) {
 		while (now - last_instruction_time >= MS_PER_INSTRUCTION(platform->instructions_per_second)) {
 			uint16_t instr = Fetch(self->chip8);
 			// Very sophisticated debugging technique:
-			printf("Current Instruction: %x at position \t %x\n", instr, self->chip8->pc);
+		//	printf("Current Instruction: %x at position \t %x\n", instr, self->chip8->pc);
 			DecodeAndExecute(self->chip8, instr);
 			
 			last_instruction_time += MS_PER_INSTRUCTION(platform->instructions_per_second);

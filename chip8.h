@@ -27,10 +27,10 @@ extern const uint16_t FONTS_START_ADDRESS;
 
 // Fonts are 4x5 pixel sprites (20 bit), but for easier memory access we use 8x5 (40 bit, 5 bytes) entries.
 // We have 16 characters (0-9 and A-F), so 16*5 bytes is 80 bytes, so we need 80 bytes to store them. 
-// Interpreters used to use the space 0x050 0x09F and so we do.
+// Interpreters used to use the space 0x050-0x09F and so we do.
 extern const uint8_t FONTSET_SIZE; 
 
-// 0:
+// For Example, the Sprite "0" is simply:
 // 1 1 1 1 0 0 0 0 
 // 1 0 0 1 0 0 0 0 
 // 1 0 0 1 0 0 0 0 
