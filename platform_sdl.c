@@ -8,7 +8,7 @@
     (type *)( (char *)__mptr - offsetof(type, member) ); })
 
 
-#define DEFAULT_INSTRUCTIONS_PER_SECOND 700 
+#define DEFAULT_INSTRUCTIONS_PER_SECOND 540
 #define TIMER_HZ 60
 #define MS_PER_INSTRUCTION(IPS) (1000.0/IPS)
 #define MS_PER_TIMER 16.66 // 1000 / 60
@@ -60,11 +60,11 @@ void Run(Platform *self) {
 
 	Draw(self);	
 
-	uint32_t last_instruction_time = SDL_GetTicks();
-	uint32_t last_timer_time = SDL_GetTicks();
-
+	uint32_t last_cycle_time = SDL_GetTicks();
+	uint32_t last_timer_time = SDL_GetTicks();	
+	uint32_t cycle_delay = 1000 / platform->instructions_per_second; // time (in ms) between cycles
+	// given IPS (eg 700 IPS), we have 1000/700 = 14ms delay 	
 	while (platform->running) {
-		uint32_t now = SDL_GetTicks();
 	
 		// Process Inputs
 		SDL_Event event;
@@ -74,45 +74,43 @@ void Run(Platform *self) {
 			}
 			ProcessInputs(self, &event);
 		}
-		if (platform->paused & 1) {
-			continue;
-		}		
-		// Execute instruction
+//		if (platform->paused & 1) {
+//			continue;
+//		}		
 		
-		while (now - last_instruction_time >= MS_PER_INSTRUCTION(platform->instructions_per_second)) {
+//		if (self->mode == PLATFORM_STEP_MODE) {
+//				printf("In step mode: %x\n", self->mode);
+//				platform->paused = 1;
+				
+//		}	
+	
+		uint32_t now = SDL_GetTicks();
+		uint32_t delta_time = now - last_cycle_time;
+		uint32_t timer_delta_time = now - last_timer_time;
+		if (delta_time >= cycle_delay) {
+			last_cycle_time = now;
+			
 			uint16_t instr = Fetch(self->chip8);
 			// Very sophisticated debugging technique:
-//			LOG_TRACE("Current Instruction: %x at position \t %x\n", instr, self->chip8->pc);
 			DecodeAndExecute(self->chip8, instr);
+			//LOG_TRACE("Current Instruction: %x at position \t %x\n", instr, self->chip8->pc);
+
+				// Update timers at 60Hz
 			
-			last_instruction_time += MS_PER_INSTRUCTION(platform->instructions_per_second);
 
-			if (self->mode == PLATFORM_STEP_MODE) {
-//				printf("In step mode: %x\n", self->mode);
-				platform->paused = 1;
-				break;	
-			}
-	
+			if (self->chip8->flag_draw_video & 1) {
+				LOG_VERBOSE("Got a draw!!!\n");
+				self->chip8->flag_draw_video = 0;
+				Draw(self);
+			}	
 		}
-
-
-		// Update timers at 60Hz
-		while (now - last_timer_time >= MS_PER_TIMER) {
+		if (timer_delta_time >= MS_PER_TIMER) {
+			last_timer_time = now;
 			if (self->chip8->timer > 0) self->chip8->timer--;
 			if (self->chip8->sound_timer > 0) self->chip8->sound_timer--;
-			last_timer_time += MS_PER_TIMER;
+		 	
 		}
-		 		
-
-		if (self->chip8->flag_draw_video & 1) {
-			LOG_VERBOSE("Got a draw!!!\n");
-			self->chip8->flag_draw_video = 0;
-			Draw(self);
-		}	
-		
-		// Since we handle timing manually, we give back control to OS
-		// but it is not stricly 16ms anymore
-		SDL_Delay(1);
+			
 	}
 }
 
