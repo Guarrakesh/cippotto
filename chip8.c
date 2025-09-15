@@ -1,6 +1,7 @@
 #include "chip8.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "log.h"
 const uint16_t START_ADDRESS = 0x200;
 const uint16_t FONTS_START_ADDRESS = 0x050;
 const uint8_t FONTSET_SIZE = 80;
@@ -167,8 +168,9 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 					vx = vy;
 					// 0x8XY6 Shift VX >> 1
 					// 0x8XYE Shift VX << 1
-					vx = N == 0x0006 ? vx >> 1 : vx << 1;
-					chip8->registers[X] = vx;	
+					// Then, set V[F]=the bit that has been shifted out.
+					uint8_t new_vx = N == 0x0006 ? vx >> 1 : vx << 1;
+					chip8->registers[X] = new_vx;	
 					chip8->registers[0xF] = N == 0x0006 
 						? vx & 1  // set 1 if the bit shifted out is 1
 						: (vx & 0x80) ? 1 : 0;
@@ -287,7 +289,7 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 
 			if (NN == 0x0029) {
 				// Load font at X
-				printf("Loading font sprite at %x\n", FONTS_START_ADDRESS + (chip8->registers[X] * 5)); 
+				LOG_VERBOSE("Loading font sprite at %x\n", FONTS_START_ADDRESS + (chip8->registers[X] * 5)); 
 				chip8->index = FONTS_START_ADDRESS + (chip8->registers[X] * 5); // fonts are 5 bytes;	
 				
 			}

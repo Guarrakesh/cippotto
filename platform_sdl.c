@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "log.h"
 #define container_of(ptr, type, member) ({ \
     const typeof( ((type *)0)->member ) *__mptr = (ptr); \
     (type *)( (char *)__mptr - offsetof(type, member) ); })
@@ -20,7 +21,7 @@ void Init(Platform *self, t_chip8 *chip8, size_t screen_width, size_t screen_hei
 	self->screen_height = screen_height;
 	
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
-		printf("Error: %s",SDL_GetError());
+		LOG_ERROR("Error: %s",SDL_GetError());
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s", SDL_GetError());
 		return; 
 	}
@@ -30,7 +31,7 @@ void Init(Platform *self, t_chip8 *chip8, size_t screen_width, size_t screen_hei
 	if (!SDL_CreateWindowAndRenderer("CHIP-8", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &platform->window, &platform->renderer)) {
 
 	
-	printf("Error: %s",SDL_GetError());
+	LOG_ERROR("Error: %s",SDL_GetError());
 	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
 	return;
 	}
@@ -80,7 +81,7 @@ void Run(Platform *self) {
 		while (now - last_instruction_time >= MS_PER_INSTRUCTION(platform->instructions_per_second)) {
 			uint16_t instr = Fetch(self->chip8);
 			// Very sophisticated debugging technique:
-		//	printf("Current Instruction: %x at position \t %x\n", instr, self->chip8->pc);
+			LOG_TRACE("Current Instruction: %x at position \t %x\n", instr, self->chip8->pc);
 			DecodeAndExecute(self->chip8, instr);
 			
 			last_instruction_time += MS_PER_INSTRUCTION(platform->instructions_per_second);
@@ -103,7 +104,7 @@ void Run(Platform *self) {
 		 		
 
 		if (self->chip8->flag_draw_video & 1) {
-			printf("Got a draw!!!\n");
+			LOG_VERBOSE("Got a draw!!!\n");
 			self->chip8->flag_draw_video = 0;
 			Draw(self);
 		}	

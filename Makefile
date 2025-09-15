@@ -14,6 +14,10 @@ OBJECTS = main.o platform_sdl.o chip8.o
 
 all: $(TARGET)
 
+verbose: CFLAGS += -DLOG_LEVEL=4 -g
+verbose: main
+
+
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
