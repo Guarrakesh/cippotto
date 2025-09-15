@@ -6,7 +6,10 @@ ifeq ($(SDL3_PREFIX),)
     SDL3_PREFIX := /usr/local
 endif
 
-CFLAGS = -Wall -Wextra -std=gnu99 -I$(SDL3_PREFIX)/include
+# Read LOG_LEVEL from environment variable, default to 0 (none)
+LOG_LEVEL ?= 0
+
+CFLAGS = -Wall -Wextra -std=gnu99 -I$(SDL3_PREFIX)/include -DLOG_LEVEL=$(LOG_LEVEL)
 LDFLAGS = -L$(SDL3_PREFIX)/lib -lSDL3
 
 TARGET = main

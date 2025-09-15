@@ -78,10 +78,11 @@ void Run(Platform *self) {
 			continue;
 		}		
 		// Execute instruction
+		
 		while (now - last_instruction_time >= MS_PER_INSTRUCTION(platform->instructions_per_second)) {
 			uint16_t instr = Fetch(self->chip8);
 			// Very sophisticated debugging technique:
-			LOG_TRACE("Current Instruction: %x at position \t %x\n", instr, self->chip8->pc);
+//			LOG_TRACE("Current Instruction: %x at position \t %x\n", instr, self->chip8->pc);
 			DecodeAndExecute(self->chip8, instr);
 			
 			last_instruction_time += MS_PER_INSTRUCTION(platform->instructions_per_second);
@@ -127,7 +128,7 @@ void ProcessInputs(Platform *self, SDL_Event *event) {
 					platform->paused = !platform->paused; 
 					break;
 				
-				case SDLK_R: 
+				case SDLK_RETURN: 
 					platform->paused = 0;
 					SDLPlatform_SetMode(platform, PLATFORM_STEP_MODE & 0);
 					break;
@@ -137,6 +138,7 @@ void ProcessInputs(Platform *self, SDL_Event *event) {
 					for ( uint8_t i=0; i<NUM_KEYS; i++) {
 						if (KEYMAP[i] == event->key.key) {
 							self->chip8->keyboard |= (1 << i); // set bit i
+							LOG_INFO("Key pressed: %d (bit %d set)", event->key.key, i);
 							break;
 						}
 					}
@@ -148,6 +150,8 @@ void ProcessInputs(Platform *self, SDL_Event *event) {
 		for (uint8_t i = 0; i < NUM_KEYS; i++) {
 			if (KEYMAP[i] == event->key.key) {
 				self->chip8->keyboard &= ~(1 << i); // clear bit 
+				LOG_INFO("Key released: %d (bit %d cleared)", event->key.key, i);
+				break;
 			}
 		}
 	}

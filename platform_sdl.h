@@ -10,11 +10,16 @@
 // Mimic the classic Keyboard layout
 // todo: Configurable?
 const static uint8_t KEYMAP[NUM_KEYS] = {
-	SDLK_1, SDLK_2, SDLK_3, SDLK_4, // 1, 2, 3, C
-	SDLK_Q, SDLK_W, SDLK_E, SDLK_R, // 4, 5, 6, D
-	SDLK_A, SDLK_S, SDLK_D, SDLK_F, // 7, 8, 9, E,
-	SDLK_Z, SDLK_X, SDLK_C, SDLK_V  // A, 0, B, F
+	SDLK_X, SDLK_1, SDLK_2, SDLK_3, // 0, 1, 2, 3
+	SDLK_Q, SDLK_W, SDLK_E, SDLK_A, // 4, 5, 6, 7,
+	SDLK_S, SDLK_D, SDLK_Z, SDLK_C, // 8, 9, A, B,
+	SDLK_4, SDLK_R, SDLK_F, SDLK_V, // C, D, E, F
 };
+// Look at your these keys on your keyboard: this is your CHIP-8 keypad 
+// 1, 2, 3, C
+// 4, 5, 6, D
+// 7, 8, 9, E,
+// A, 0, B, F
 typedef struct SDLPlatform {
 	struct Platform base;
 	uint8_t running;
