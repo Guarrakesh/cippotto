@@ -140,8 +140,8 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 				case 0x0004: {
 					uint16_t sum = vx + vy;
  					// set carry flag to 1 if sum overflows
-					chip8->registers[0xF] = sum > 255 ? 1 : 0;
 					chip8->registers[X] = sum;
+					chip8->registers[0xF] = sum > 255 ? 1 : 0;
 					break;
 				}
 				case 0x0005:
@@ -167,11 +167,11 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 					vx = vy;
 					// 0x8XY6 Shift VX >> 1
 					// 0x8XYE Shift VX << 1
+					vx = N == 0x0006 ? vx >> 1 : vx << 1;
+					chip8->registers[X] = vx;	
 					chip8->registers[0xF] = N == 0x0006 
 						? vx & 1  // set 1 if the bit shifted out is 1
 						: (vx & 0x80) ? 1 : 0;
-					vx = N == 0x0006 ? vx >> 1 : vx << 1;
-					chip8->registers[X] = vx;	
 					break;
 				}
 				
