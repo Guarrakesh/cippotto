@@ -134,10 +134,10 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 			uint8_t vx = chip8->registers[X];
 			uint8_t vy = chip8->registers[Y];
 			switch (N) { // read last nibble
-				case 0x0000: chip8->registers[X] = vy; break;
-				case 0x0001: chip8->registers[X] |= vy; break;
-				case 0x0002: chip8->registers[X] &= vy; break;
-				case 0x0003: chip8->registers[X] ^= vy; break;
+				case 0x0000: chip8->registers[X] = vy;break;
+				case 0x0001: chip8->registers[X] |= vy; chip8->registers[0xF] = 0; break;
+				case 0x0002: chip8->registers[X] &= vy; chip8->registers[0xF] = 0; break;
+				case 0x0003: chip8->registers[X] ^= vy; chip8->registers[0xF] = 0; break;
 				case 0x0004: {
 					uint16_t sum = vx + vy;
  					// set carry flag to 1 if sum overflows
@@ -203,12 +203,27 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 		case 0xD000: {
 			// Draw DXYN
 			// 1. fetch VX and VY pointers
-			uint8_t vx = X;
-			uint8_t vy = Y;
 			uint8_t height = N; 
 			// 2. Module the X and Y coordinates.
-			uint8_t x = chip8->registers[vx] % (VIDEO_LENGTH - 1);
-			uint8_t y = chip8->registers[vy] % (32 - 1);
+			uint8_t x = chip8->registers[X] % 64;
+			uint8_t y = chip8->registers[Y] % 32;
+
+			// Print video memory around the draw area for debugging
+			#if 0
+			printf("Video before draw:\n");
+			for (int dy = -2; dy <= height + 1; dy++) {
+				if (y + dy >= 0 && y + dy < 32) {
+					printf("Row %d: ", y + dy);
+					for (int dx = -2; dx < 10; dx++) {
+						if (x + dx >= 0 && x + dx < 64) {
+							uint8_t pixel = (chip8->video[x + dx] >> (y + dy)) & 1;
+							printf("%c", pixel ? '#' : '.');
+						}
+					}
+					printf("\n");
+				}
+			}
+			#endif 
 			// 3. Set VF (V[15]) to 0
 			chip8->registers[0xF] = 0;
 
@@ -216,27 +231,47 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 				// 4. get the sprite from index register
 				uint8_t sprite_byte = chip8->memory[chip8->index + i];
 				for (uint8_t bit = 0; bit < 8; bit++) {
-					uint8_t pixel_x = x + bit;
+					uint8_t pixel_x = x + bit; 
 					uint8_t pixel_y = y + i;
 					// check bounds
-					if (pixel_x >= 64 || pixel_y >= 32) continue;
+					if (pixel_x >= 64) break;
+					if (pixel_y >= 32) break;
 					// get the bit from the sprite, from msb to lsb
 					uint8_t sprite_pixel = (sprite_byte >> (7-bit)) & 1;
 					// current bit from the video sprite
 					uint8_t current_pixel = (chip8->video[pixel_x] >> pixel_y) & 1;
-
-					uint8_t new_pixel = sprite_pixel ^ current_pixel;
-					if (current_pixel && !new_pixel) chip8->registers[0xF] = 1; // collision!
 					
-					if (new_pixel) {
-						chip8->video[pixel_x] |= (1U << pixel_y); // set bit 
-					} else {
-						chip8->video[pixel_x] &= ~(1U << pixel_y); // clear bit
+					// Check for collision (both pixels are on before XOR)
+					if (current_pixel && sprite_pixel) {
+						chip8->registers[0xF] = 1;
+					}
+
+					// Only XOR if sprite pixel is on
+					if (sprite_pixel) {
+						chip8->video[pixel_x] ^= (1U << pixel_y);
 					}
 				}
-									
-			}	
-			chip8->flag_draw_video = 1;	
+
+			}
+
+			#if 0
+			// Print video memory after draw
+			printf("Video after draw:\n");
+			for (int dy = -2; dy <= height + 1; dy++) {
+				if (y + dy >= 0 && y + dy < 32) {
+					printf("Row %d: ", y + dy);
+					for (int dx = -2; dx < 10; dx++) {
+						if (x + dx >= 0 && x + dx < 64) {
+							uint8_t pixel = (chip8->video[x + dx] >> (y + dy)) & 1;
+							printf("%c", pixel ? '#' : '.');
+						}
+					}
+					printf("\n");
+				}
+			}
+			printf("VF set to: %d\n\n", chip8->registers[0xF]);
+			#endif 
+			chip8->flag_draw_video = 1;
 			break;
 		}
 
@@ -255,7 +290,7 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 					
 					break;
 				case 0x00A1: 
-					if (!key_pressed) {
+					if (key_pressed == 0) {
 						chip8->pc += 2;
 					}
 					break;
@@ -284,6 +319,14 @@ void DecodeAndExecute(t_chip8 *chip8, uint16_t instruction) {
 				// Stops until a key is pressed // TODO:
 				if (chip8->keyboard == 0) {
 					chip8->pc -= 2; // repeat until key is pressed
+				} else {
+					for (uint8_t i=0; i<NUM_KEYS; i++) {
+						if ((chip8->keyboard >> i) & 1) {
+							LOG_INFO("Key %d has been pressed", i);
+							chip8->registers[X] = i;		
+
+						}
+					}	
 				}
 			}
 

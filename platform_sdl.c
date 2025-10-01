@@ -8,7 +8,7 @@
     (type *)( (char *)__mptr - offsetof(type, member) ); })
 
 
-#define DEFAULT_INSTRUCTIONS_PER_SECOND 540
+#define DEFAULT_INSTRUCTIONS_PER_SECOND 700
 #define TIMER_HZ 60
 #define MS_PER_INSTRUCTION(IPS) (1000.0/IPS)
 #define MS_PER_TIMER 16.66 // 1000 / 60
@@ -89,7 +89,7 @@ void Run(Platform *self) {
 		uint32_t timer_delta_time = now - last_timer_time;
 		if (delta_time >= cycle_delay) {
 			last_cycle_time = now;
-			
+				
 			uint16_t instr = Fetch(self->chip8);
 			// Very sophisticated debugging technique:
 			DecodeAndExecute(self->chip8, instr);
